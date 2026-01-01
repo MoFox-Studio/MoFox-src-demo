@@ -1,0 +1,73 @@
+# MoFox 核心依赖
+
+# 异步与并发
+aiohttp>=3.9.0
+asyncio-mqtt>=0.16.0
+
+# 数据库
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+psycopg2-binary>=2.9.0  # PostgreSQL
+aiomysql>=0.2.0  # MySQL
+aiosqlite>=0.19.0  # SQLite
+
+# 向量数据库
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+
+# LLM 客户端
+openai>=1.10.0
+anthropic>=0.18.0
+google-generativeai>=0.3.0
+boto3>=1.34.0  # AWS Bedrock
+
+# 缓存
+redis>=5.0.0
+aioredis>=2.0.0
+
+# 日志与监控
+loguru>=0.7.0
+rich>=13.7.0
+
+# 配置管理
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+toml>=0.10.2
+
+# 工具库
+python-dateutil>=2.8.0
+pytz>=2023.3
+ujson>=5.9.0
+msgpack>=1.0.7
+
+# 测试
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# 开发工具
+black>=23.12.0
+flake8>=7.0.0
+mypy>=1.8.0
+isort>=5.13.0
+
+# 类型注解
+typing-extensions>=4.9.0
+
+# HTTP 和网络
+httpx>=0.26.0
+websockets>=12.0
+
+# 数据处理
+pandas>=2.1.0
+numpy>=1.26.0
+
+# JSON Schema
+jsonschema>=4.20.0
+
+# 其他
+tenacity>=8.2.0  # 重试机制
+cachetools>=5.3.0  # 缓存工具
