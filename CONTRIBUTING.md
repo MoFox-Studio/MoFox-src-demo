@@ -53,13 +53,13 @@ pytest tests/ -v
 pytest --cov=mofox_src --cov-report=html
 
 # 代码格式化
-black mofox-src/ tests/
+black src/ tests/
 
 # 代码风格检查
-flake8 mofox-src/ tests/
+flake8 src/ tests/
 
 # 类型检查
-mypy mofox-src/
+mypy src/
 ```
 
 ### 4. 提交代码
@@ -190,13 +190,13 @@ MoFox 采用严格的三层架构，不同层级有不同的质量要求和审�
 
 ```bash
 # 代码格式化（自动修复）
-black mofox-src/ tests/ --line-length 88
+black src/ tests/ --line-length 88
 
 # 代码风格检查
-flake8 mofox-src/ tests/ --max-line-length 88 --extend-ignore E203,W503
+flake8 src/ tests/ --max-line-length 88 --extend-ignore E203,W503
 
 # 类型检查
-mypy mofox-src/ --strict
+mypy src/ --strict
 ```
 
 ### 命名规范
@@ -313,7 +313,7 @@ def good_function():
 每个模块文件都必须有对应的测试文件：
 
 ```
-mofox-src/kernel/concurrency/watchdog.py
+src/kernel/concurrency/watchdog.py
 → tests/kernel/concurrency/test_watchdog.py
 ```
 
@@ -444,7 +444,7 @@ pytest -n auto
 每个模块文件都必须有对应的 Markdown 文档：
 
 ```
-mofox-src/kernel/concurrency/watchdog.py
+src/kernel/concurrency/watchdog.py
 → docs/kernel/concurrency/watchdog.md
 ```
 
@@ -624,9 +624,9 @@ Migration guide: ...
 ```bash
 # CI 自动运行
 - pytest --cov=mofox_src/kernel --cov-report=term --cov-fail-under=100
-- black --check mofox-src/kernel
-- flake8 mofox-src/kernel
-- mypy mofox-src/kernel --strict
+- black --check src/kernel
+- flake8 src/kernel
+- mypy src/kernel --strict
 ```
 
 **人工审查重点**:
@@ -657,9 +657,9 @@ CI 通过 → 架构师初审（1-2天）
 **自动检查**:
 ```bash
 - pytest --cov=mofox_src/core --cov-report=term --cov-fail-under=100
-- black --check mofox-src/core
-- flake8 mofox-src/core
-- mypy mofox-src/core --strict
+- black --check src/core
+- flake8 src/core
+- mypy src/core --strict
 ```
 
 **人工审查重点**:
@@ -687,8 +687,8 @@ CI 通过 → 核心维护者审查（1-2天）
 **自动检查**:
 ```bash
 - pytest --cov=mofox_src/app --cov-report=term --cov-fail-under=80
-- black --check mofox-src/app
-- flake8 mofox-src/app
+- black --check src/app
+- flake8 src/app
 ```
 
 **人工审查重点**:

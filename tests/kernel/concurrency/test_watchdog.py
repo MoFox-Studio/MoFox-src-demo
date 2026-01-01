@@ -7,7 +7,7 @@ import pytest
 import pytest_asyncio
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-MOFOX_SRC_PATH = PROJECT_ROOT / "mofox-src"
+MOFOX_SRC_PATH = PROJECT_ROOT / "src"
 if str(MOFOX_SRC_PATH) not in sys.path:
     sys.path.insert(0, str(MOFOX_SRC_PATH))
 

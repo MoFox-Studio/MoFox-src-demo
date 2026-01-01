@@ -118,7 +118,7 @@ docs/
 
 ### 目录结构规范
 - 文档目录结构与源码目录结构完全一致
-- 例如：`mofox-src/kernel/concurrency/watchdog.py` → `docs/kernel/concurrency/watchdog.md`
+- 例如：`src/kernel/concurrency/watchdog.py` → `docs/kernel/concurrency/watchdog.md`
 
 ### 内容编写规范
 

@@ -4,7 +4,7 @@
 
 Watchdog 是 MoFox 框架中的全局异步任务监控器，采用单例模式设计，用于监控和管理 asyncio 异步任务的完整生命周期。
 
-**模块路径**: `mofox-src/kernel/concurrency/watchdog.py`
+**模块路径**: `src/kernel/concurrency/watchdog.py`
 
 ## 主要功能
 

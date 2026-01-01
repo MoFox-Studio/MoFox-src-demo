@@ -9,7 +9,7 @@
 
 ## 目录速览
 ```
-mofox-src/
+src/
   kernel/
   core/
 ```
@@ -45,7 +45,7 @@ mofox-src/
 
 #### 2. 测试文件结构要求
 ```
-mofox-src/
+src/
 ├── kernel/
 │   ├── concurrency/
 │   │   ├── watchdog.py
@@ -95,16 +95,16 @@ docs/
 所有提交必须通过以下检查：
 ```bash
 # 代码格式化
-black mofox-src/
+black src/
 
 # 代码风格检查
-flake8 mofox-src/
+flake8 src/
 
 # 类型检查
-mypy mofox-src/
+mypy src/
 
 # 导入排序
-isort mofox-src/
+isort src/
 
 # 运行测试
 pytest tests/ --cov=mofox_src --cov-report=term-missing
