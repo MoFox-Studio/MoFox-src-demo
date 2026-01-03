@@ -38,7 +38,7 @@ class TaskInfo:
     end_time: Optional[float] = None
     timeout: Optional[float] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    error: Optional[Exception] = None
+    error: Optional[BaseException] = None
     
     @property
     def duration(self) -> float:
@@ -321,15 +321,15 @@ class Watchdog:
         task_info.status = TaskStatus.TIMEOUT
         self._stats['total_timeout'] += 1
         
-        # 触发超时回调
+        # 触发超时回调，让上层决定是否取消任务
         for callback in self._on_timeout_callbacks:
             try:
                 callback(task_id, task_info)
             except Exception as e:
                 print(f"[Watchdog] 超时回调执行失败: {e}")
         
-        # 取消超时任务
-        await self.cancel_task(task_id, "Task timeout")
+        # 注意：不再自动取消超时任务，而是让 TaskManager 通过回调决定
+        # 如果上层没有处理，任务将继续运行并在真正完成时更新状态
     
     def print_status(self):
         """打印监控器状态"""

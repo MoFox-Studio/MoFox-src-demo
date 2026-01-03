@@ -72,7 +72,7 @@ class ManagedTask:
     task: Optional[asyncio.Task] = None
     watchdog_id: Optional[str] = None
     result: Any = None
-    error: Optional[Exception] = None
+    error: Optional[BaseException] = None
     retry_count: int = 0
     create_time: float = field(default_factory=time.time)
     start_time: Optional[float] = None
@@ -159,6 +159,14 @@ class TaskManager:
         
         # Watchdog 实例
         self._watchdog = get_watchdog() if enable_watchdog else None
+        
+        # 配置项
+        self.auto_cancel_on_timeout = True  # 超时时是否自动取消任务
+        
+        # 如果启用 Watchdog，注册相应的回调
+        if self._watchdog:
+            self._watchdog.add_timeout_callback(self._on_watchdog_timeout)
+            self._watchdog.add_error_callback(self._on_watchdog_error)
     
     async def start(self):
         """启动任务管理器"""
@@ -347,6 +355,10 @@ class TaskManager:
             return
         
         # 获取信号量（控制并发）
+        if not self._semaphore:
+            logger.error("信号量未初始化，无法执行任务")
+            return
+        
         await self._semaphore.acquire()
         
         try:
@@ -381,8 +393,50 @@ class TaskManager:
                 await self._on_task_error(managed_task, e)
             
         finally:
-            self._semaphore.release()
+            if self._semaphore:
+                self._semaphore.release()
             self._stats['total_running'] -= 1
+    
+    def _on_watchdog_timeout(self, watchdog_id: str, task_info: Any):
+        """
+        Watchdog 超时回调
+        
+        将 Watchdog 检测到的超时事件转发给对应的 TaskManager 任务，
+        可配置是否自动取消超时任务
+        """
+        # 通过 watchdog_id 查找对应的 ManagedTask
+        for task_id, managed_task in self._tasks.items():
+            if managed_task.watchdog_id == watchdog_id:
+                logger.warning(
+                    f"[Watchdog] 检测到任务超时: {managed_task.name} "
+                    f"(ID: {task_id}), 超时时间: {task_info.timeout}s, "
+                    f"实际运行时长: {task_info.duration:.2f}s"
+                )
+                
+                # 如果启用了自动取消超时任务，则取消该任务
+                if self.auto_cancel_on_timeout and managed_task.task and not managed_task.task.done():
+                    logger.info(f"[TaskManager] 自动取消超时任务: {managed_task.name}")
+                    managed_task.task.cancel("Task timeout in watchdog")
+                    self._stats['total_timeout_cancelled'] += 1
+                
+                break
+    
+    def _on_watchdog_error(self, watchdog_id: str, task_info: Any):
+        """
+        Watchdog 错误回调
+        
+        仅用于记录 Watchdog 检测到的任务错误。
+        实际的错误处理在 _on_task_error 中完成。
+        """
+        # 通过 watchdog_id 查找对应的 ManagedTask
+        for task_id, managed_task in self._tasks.items():
+            if managed_task.watchdog_id == watchdog_id:
+                logger.error(
+                    f"[Watchdog] 检测到任务错误: {managed_task.name} "
+                    f"(ID: {task_id}), 错误类型: {type(task_info.error).__name__}, "
+                    f"错误信息: {task_info.error}"
+                )
+                break
     
     async def _on_task_success(self, managed_task: ManagedTask, result: Any):
         """任务成功完成"""
@@ -402,6 +456,9 @@ class TaskManager:
                 await self._safe_callback(callback, managed_task)
             except Exception as e:
                 logger.error(f"完成回调执行失败: {e}")
+        
+        # 从 Watchdog 中注销任务
+        await self._unregister_from_watchdog(managed_task)
         
         # 处理依赖此任务的任务
         await self._notify_dependents(managed_task.task_id)
@@ -447,6 +504,9 @@ class TaskManager:
                 except Exception as e:
                     logger.error(f"失败回调执行失败: {e}")
             
+            # 从 Watchdog 中注销任务
+            await self._unregister_from_watchdog(managed_task)
+            
             # 处理依赖此任务的任务
             await self._notify_dependents(managed_task.task_id)
     
@@ -456,6 +516,8 @@ class TaskManager:
         managed_task.end_time = time.time()
         self._stats['total_cancelled'] += 1
         
+        # 从 Watchdog 中注销任务
+        await self._unregister_from_watchdog(managed_task)
         logger.info(f"任务已取消: {managed_task.name} (ID: {managed_task.task_id})")
         
         # 处理依赖此任务的任务
@@ -491,6 +553,25 @@ class TaskManager:
             await callback(managed_task)
         else:
             callback(managed_task)
+    
+    async def _unregister_from_watchdog(self, managed_task: ManagedTask):
+        """
+        从 Watchdog 中注销任务
+        
+        防止任务完成后仍然被 Watchdog 追踪，导致内存泄漏
+        """
+        if self._watchdog and managed_task.watchdog_id:
+            try:
+                self._watchdog.unregister_task(managed_task.watchdog_id)
+                logger.debug(
+                    f"任务已从 Watchdog 中注销: {managed_task.name} "
+                    f"(watchdog_id: {managed_task.watchdog_id})"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"从 Watchdog 注销任务失败: {managed_task.name}, "
+                    f"错误: {e}"
+                )
     
     async def cancel_task(self, task_id: str) -> bool:
         """
@@ -550,7 +631,10 @@ class TaskManager:
         if managed_task.state == TaskState.COMPLETED:
             return managed_task.result
         elif managed_task.state == TaskState.FAILED:
-            raise managed_task.error
+            if managed_task.error:
+                raise managed_task.error
+            else:
+                raise RuntimeError("Task failed with unknown error")
         else:
             raise asyncio.CancelledError()
     
